@@ -13,7 +13,10 @@ let displayDefault = '0'
 let validKeys = Object.values(buttons)
 let numKeys = ['1','2','3','4','5','6','7','8','9','0']
 let exprKeys= ['1','2','3','4','5','6','7','8','9','0',
-               '=','+','-','x','/','.']
+               '+','-','x','/','.','*']
+let operator= ['+','-','x','/']
+let seperator = /[+]/
+
 class Button extends Component {
   render() {
     let id = this.props.id;
@@ -33,6 +36,22 @@ class App extends Component {
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.handleInput = this.handleInput.bind(this);
+    this.notDoubleDecimal = this.notDoubleDecimal.bind(this);
+    this.notConsecutiveOperator = this.notConsecutiveOperator.bind(this);
+    this.calculation = this.calculation.bind(this);
+  }
+  notDoubleDecimal(key){
+    if (key!==buttons['decimal']){
+      return true;
+    } else {
+      return !(/\./).test(this.state.displayText.split(seperator).pop())
+    }
+  }
+  notConsecutiveOperator(key){
+      return !(operator.includes(key) && operator.includes(this.state.displayText[this.state.displayText.length-1]))
+  }
+  calculation(){
+
   }
   handleInput(key){
     if (exprKeys.includes(key)){
@@ -41,16 +60,19 @@ class App extends Component {
         if (numKeys.includes(key)){
           this.setState({displayText: key})
         }
-      } else {
-       this.setState({displayText: this.state.displayText.concat(key)})
+      } else if (this.notDoubleDecimal(key) &&  this.notConsecutiveOperator(key)) {
+        if (key==='*'){
+          this.setState({displayText: this.state.displayText.concat(buttons['multiply'])})
+        } else {
+          this.setState({displayText: this.state.displayText.concat(key)})
+        }
       }
     } else if (key===buttons['equals']) {
-      console.log('Equal')
-      this.setState({displayText: displayDefault, expression:''})
+      this.setState({expression:this.state.displayText})
+      this.calculation();
     } else if (key===buttons['clear']) {
       this.setState({displayText: displayDefault, expression:''})
     }
-    console.log(key,key===buttons['equals'])
 
   }
   handleClick(id){
@@ -75,28 +97,31 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <div id='display'>{this.state.displayText}</div>
-        <div id='container'>
-          <Button id='clearE' handleClick={this.handleClick.bind(this)} />
-          <Button id='clear'  handleClick={this.handleClick.bind(this)} />
-          <Button id='escape' handleClick={this.handleClick.bind(this)} />
-          <Button id='divide' handleClick={this.handleClick.bind(this)} />
-          <Button id='one'    handleClick={this.handleClick.bind(this)} />
-          <Button id='two'    handleClick={this.handleClick.bind(this)} />
-          <Button id='three'  handleClick={this.handleClick.bind(this)} />
-          <Button id='multiply' handleClick={this.handleClick.bind(this)} />
-          <Button id='four' handleClick={this.handleClick.bind(this)}/>
-          <Button id='five' handleClick={this.handleClick.bind(this)}/>
-          <Button id='six' handleClick={this.handleClick.bind(this)}/>
-          <Button id='subtract' handleClick={this.handleClick.bind(this)}/>
-          <Button id='seven' handleClick={this.handleClick.bind(this)}/>
-          <Button id='eight' handleClick={this.handleClick.bind(this)}/>
-          <Button id='nine' handleClick={this.handleClick.bind(this)}/>
-          <Button id='add' handleClick={this.handleClick.bind(this)}/>
-          <Button id='negative' handleClick={this.handleClick.bind(this)}/>
-          <Button id='zero' handleClick={this.handleClick.bind(this)}/>
-          <Button id='decimal' handleClick={this.handleClick.bind(this)}/>
-          <Button id='equals' handleClick={this.handleClick.bind(this)}/>
+        <div id='calculator'>
+          <div id='expression'>{this.state.expression}</div>
+          <div id='display'>{this.state.displayText}</div>
+          <div id='container'>
+            <Button id='clearE' handleClick={this.handleClick.bind(this)} />
+            <Button id='clear'  handleClick={this.handleClick.bind(this)} />
+            <Button id='escape' handleClick={this.handleClick.bind(this)} />
+            <Button id='divide' handleClick={this.handleClick.bind(this)} />
+            <Button id='one'    handleClick={this.handleClick.bind(this)} />
+            <Button id='two'    handleClick={this.handleClick.bind(this)} />
+            <Button id='three'  handleClick={this.handleClick.bind(this)} />
+            <Button id='multiply' handleClick={this.handleClick.bind(this)} />
+            <Button id='four' handleClick={this.handleClick.bind(this)}/>
+            <Button id='five' handleClick={this.handleClick.bind(this)}/>
+            <Button id='six' handleClick={this.handleClick.bind(this)}/>
+            <Button id='subtract' handleClick={this.handleClick.bind(this)}/>
+            <Button id='seven' handleClick={this.handleClick.bind(this)}/>
+            <Button id='eight' handleClick={this.handleClick.bind(this)}/>
+            <Button id='nine' handleClick={this.handleClick.bind(this)}/>
+            <Button id='add' handleClick={this.handleClick.bind(this)}/>
+            <Button id='negative' handleClick={this.handleClick.bind(this)}/>
+            <Button id='zero' handleClick={this.handleClick.bind(this)}/>
+            <Button id='decimal' handleClick={this.handleClick.bind(this)}/>
+            <Button id='equals' handleClick={this.handleClick.bind(this)}/>
+          </div>
         </div>
         <p>Javascript calculator by CT</p>
       </div>
