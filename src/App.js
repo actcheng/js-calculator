@@ -125,7 +125,7 @@ class App extends Component {
       // decimal
       } else if (key===buttons['decimal'] && this.notDoubleDecimal(displayNum)){
         displayNum = displayNum.concat(key)
-        this.setState({ displayNum: displayNum })
+        this.setState({ displayNum: displayNum, replace: false })
       // operator
       } else if (operator.includes(key)){
         let op = key;
