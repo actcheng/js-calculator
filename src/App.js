@@ -15,7 +15,6 @@ let numKeys = ['1','2','3','4','5','6','7','8','9','0']
 let exprKeys= ['1','2','3','4','5','6','7','8','9','0',
                '+','-','x','/','.','*']
 let operator= ['x','/','+','-']
-let seperator = /[x+\-/]/
 
 class Button extends Component {
   render() {
@@ -30,10 +29,11 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      reset: false,
-      displayText: displayDefault,
+      history: [],
+      replace: true,
+      displayNum: displayDefault,
       displayExpr: '',
-      result: displayDefault
+      exprArr: [],
     }
     this.baseState = this.state
     this.handleKeyPress = this.handleKeyPress.bind(this);
@@ -45,12 +45,8 @@ class App extends Component {
     this.combineNumber = this.combineNumber.bind(this);
   }
 
-  notDoubleDecimal(key){
-    if (key!==buttons['decimal']){
-      return true;
-    } else {
-      return !(/\./).test(this.state.displayText.split(seperator).pop())
-    }
+  notDoubleDecimal(displayNum){
+      return !(/\./).test(displayNum)
   }
 
   isConsecutiveOperator(key){
@@ -82,8 +78,7 @@ class App extends Component {
     return exprArr;
   }
 
-  calculation(expr){
-    let exprArr = expr.split(/([x+\-/])/g);
+  calculation(exprArr){
     // multiply
     while (exprArr.indexOf('x')>-1){
       exprArr = this.combineNumber(exprArr,exprArr.indexOf('x'),'x')
@@ -96,48 +91,77 @@ class App extends Component {
     while (exprArr.length>1){
       exprArr = this.combineNumber(exprArr,1,exprArr[1])
     }
+
+    let ans = exprArr[0].toString();
+
     this.setState({
-      displayText:exprArr[0],
-      result: exprArr[0].toString(),
-      reset: true})
+      replace: true,
+      displayNum: ans,
+      displayExpr: '',
+      exprArr: [],
+    })
+    console.log('After calculation:',ans)
   }
 
   handleInput(key){
+    console.log(this.state)
 
-    let text = this.state.result;
-    if (this.state.reset){
-       this.setState(this.baseState)
-    } else {
-      text = this.state.displayText;
-    }
+    let displayExpr = this.state.displayExpr;
+    let displayNum = this.state.displayNum;
+    let exprArr = this.state.exprArr;
 
-    if (exprKeys.includes(key)){
-      if (text===displayDefault){
-        if (numKeys.includes(key)){
-          this.setState({displayText: key})
-        }
-      } else if (this.notDoubleDecimal(key)) {
-        if (this.isConsecutiveOperator(key)){
-          text = text.slice(0,-1)
-        }
-        if (key==='*'){
-          this.setState({displayText: text.concat(buttons['multiply'])})
+    if (validKeys.includes(key)){
+      // Number keys
+      if (numKeys.includes(key)){
+        if (this.state.replace===true){
+          displayNum = key;
+          this.setState({
+            displayNum: displayNum,
+            replace: false})
         } else {
-          this.setState({displayText: text.concat(key)})
+          displayNum = displayNum.concat(key)
+          this.setState({ displayNum: displayNum })
+        }
+      // decimal
+      } else if (key===buttons['decimal'] && this.notDoubleDecimal(displayNum)){
+        displayNum = displayNum.concat(key)
+        this.setState({ displayNum: displayNum })
+      // operator
+      } else if (operator.includes(key)){
+        let op = key;
+
+        if (key==='*'){
+          op = buttons['multiply'];
         }
 
+        if (operator.includes(exprArr[exprArr.length-1])){
+          exprArr.pop()
+          displayExpr = displayExpr.slice(0,-1)
+        }
+        exprArr.push(displayNum, op)
+        displayExpr = displayExpr.concat(displayNum, op)
+        this.setState({
+          replace: true,
+          displayExpr: displayExpr,
+          exprArr: exprArr
+        })
+      // functions
+      } else if (key===buttons['equals']) {
+        exprArr.push(displayNum)
+        this.calculation(exprArr);
+      // calculation
+      } else if (key===buttons['negative']) {
+        displayNum = '-'.concat(displayNum)
+        this.setState({ displayNum: displayNum})
+      } else if (key===buttons['clear']) {
+        this.setState(this.baseState)
+      } else if (key===buttons['clearE']) {
+        displayNum = displayDefault
+        this.setState({ displayNum: displayNum , replace: true})
+      }else if (key===buttons['escape']){
+        displayNum = displayNum.slice(0,-1)
+        this.setState({ displayNum: displayNum  })
       }
-    } else if (key===buttons['equals']) {
-      let expr = text
-      if (operator.includes(expr.split('').pop())){
-        expr = expr.slice(0,-1)
-      }
-      this.setState({ displayExpr:expr })
-      this.calculation(expr);
-    } else if (key===buttons['clear']) {
-      this.setState({displayText: displayDefault, displayExpr:''})
-    } else if (key===buttons['escape']){
-        this.setState({displayText: text.slice(0,-1)})
     }
   }
   handleClick(id){
@@ -155,19 +179,13 @@ class App extends Component {
   componentWillMount(){
     document.addEventListener("keydown", this.handleKeyPress.bind(this));
   }
-  componentDidMount () {
-        const script = document.createElement("script");
-        script.src = "https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js";
-        script.async = true;
-        document.body.appendChild(script);
-  }
 
   render() {
     return (
       <div className="App">
         <div id='calculator'>
           <div id='expression'>{this.state.displayExpr}</div>
-          <div id='display'>{this.state.displayText}</div>
+          <div id='display'>{this.state.displayNum}</div>
           <div id='container'>
             <Button id='clearE' handleClick={this.handleClick.bind(this)} />
             <Button id='clear'  handleClick={this.handleClick.bind(this)} />
