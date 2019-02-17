@@ -29,7 +29,6 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      history: [],
       replace: true,
       displayNum: displayDefault,
       displayExpr: '',
@@ -74,14 +73,18 @@ class App extends Component {
       default:
         break;
       }
+
     exprArr.splice(ind-1,3,result)
-    return exprArr;
+    console.log(exprArr)
+    return exprArr
   }
 
   calculation(exprArr){
+    console.log('Caluclation',exprArr)
     // multiply
     while (exprArr.indexOf('x')>-1){
       exprArr = this.combineNumber(exprArr,exprArr.indexOf('x'),'x')
+      console.log('After',exprArr)
     }
     // division
     while (exprArr.indexOf('/')>-1){
@@ -104,7 +107,7 @@ class App extends Component {
   }
 
   handleInput(key){
-    console.log(this.state)
+    console.log('input',this.state.exprArr)
 
     let displayExpr = this.state.displayExpr;
     let displayNum = this.state.displayNum;
@@ -134,10 +137,7 @@ class App extends Component {
           op = buttons['multiply'];
         }
 
-        if (operator.includes(exprArr[exprArr.length-1])){
-          exprArr.pop()
-          displayExpr = displayExpr.slice(0,-1)
-        }
+        // if (!operator.includes(exprArr[exprArr.length-1])){
         exprArr.push(displayNum, op)
         displayExpr = displayExpr.concat(displayNum, op)
         this.setState({
@@ -145,16 +145,24 @@ class App extends Component {
           displayExpr: displayExpr,
           exprArr: exprArr
         })
+      
       // functions
       } else if (key===buttons['equals']) {
         exprArr.push(displayNum)
+        console.log('Before cal', exprArr)
         this.calculation(exprArr);
       // calculation
       } else if (key===buttons['negative']) {
         displayNum = '-'.concat(displayNum)
         this.setState({ displayNum: displayNum})
       } else if (key===buttons['clear']) {
-        this.setState(this.baseState)
+        this.setState({
+          replace: true,
+          displayNum: displayDefault,
+          displayExpr: '',
+          exprArr: [],
+        })
+        console.log('CLR')
       } else if (key===buttons['clearE']) {
         displayNum = displayDefault
         this.setState({ displayNum: displayNum , replace: true})
